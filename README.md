@@ -1,6 +1,13 @@
----------------------------------------- Kubeadm Installation ------------------------------------------ 
 
--------------------------------------- Both Master & Worker Node ---------------------------------------
+# 🚀 Kubernetes Cluster Setup using Kubeadm (v1.20.0)
+
+This guide helps you set up a Kubernetes cluster using `kubeadm` on **Ubuntu-based systems**. It includes steps for both **Master** and **Worker** nodes.
+
+---
+
+## 🧰 Prerequisites (Run on Both Master & Worker Nodes)
+
+```bash
 sudo su
 apt update -y
 apt install docker.io -y
@@ -9,44 +16,101 @@ systemctl start docker
 systemctl enable docker
 
 curl -fsSL "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg
+
 echo 'deb https://packages.cloud.google.com/apt kubernetes-xenial main' > /etc/apt/sources.list.d/kubernetes.list
 
 apt update -y
 apt install kubeadm=1.20.0-00 kubectl=1.20.0-00 kubelet=1.20.0-00 -y
+```
 
-# To connect with cluster execute above commands on master node and worker node respectively
---------------------------------------------- Master Node -------------------------------------------------- 
+---
+
+## 🧩 Master Node Setup
+
+```bash
 sudo su
 kubeadm init
+```
 
-# To start using your cluster, you need to run the following as a regular user:
-  mkdir -p $HOME/.kube
-  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+### 🔧 Configure kubectl Access
 
-# Alternatively, if you are the root user, you can run:
-  export KUBECONFIG=/etc/kubernetes/admin.conf
-  
+#### If you are a regular user:
+
+```bash
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+#### If you are root:
+
+```bash
+export KUBECONFIG=/etc/kubernetes/admin.conf
+```
+
+---
+
+### 🌐 Apply Network Plugin (Weave Net)
+
+```bash
 kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+```
 
+---
+
+### 🔑 Generate Join Command
+
+```bash
 kubeadm token create --print-join-command
-  
+```
 
-------------------------------------------- Worker Node ------------------------------------------------ 
+Copy the command and use it on each Worker Node.
+
+---
+
+## 🧮 Worker Node Setup
+
+```bash
 sudo su
-kubeadm reset pre-flight checks
------> Paste the Join command on worker node and append `--v=5` at end
+kubeadm reset
+```
 
-#To verify cluster connection  
----------------------------------------on Master Node-----------------------------------------
+### Paste the Join Command from Master Node
 
-kubectl get nodes 
+Append `--v=5` to the join command for verbose output:
 
+```bash
+kubeadm join <MASTER_IP>:6443 --token <TOKEN> --discovery-token-ca-cert-hash <HASH> --v=5
+```
 
-# worker
-# kubeadm join 172.31.84.66:6443 --token n4tfb4.grmew1s1unug0get     --discovery-token-ca-cert-hash sha256:c3fda2eaf5960bed4320d8175dc6a73b1556795b1b7f5aadc07642ed85c51069 --v=5
-# kubeadm reset pre-flight checks
-# kubeadm token create --print-join-command
-# kubectl label node ip-172-31-20-246 node-role.kubernetes.io/worker=worker
-# kubectl label nodes ip-172-31-92-99 kubernetes.io/role=worker
-# kubectl config set-context $(kubectl config current-context) --namespace=dev
+---
+
+## ✅ Verify Nodes from Master
+
+```bash
+kubectl get nodes
+```
+
+---
+
+## 🏷️ Optional: Label Worker Nodes
+
+```bash
+kubectl label node <NODE_NAME> node-role.kubernetes.io/worker=worker
+kubectl label node <NODE_NAME> kubernetes.io/role=worker
+```
+
+---
+
+## 📂 Optional: Set Default Namespace
+
+```bash
+kubectl config set-context $(kubectl config current-context) --namespace=dev
+```
+
+---
+
+## 📌 Notes
+
+- Replace `<MASTER_IP>`, `<TOKEN>`, and `<HASH>` with actual values from the join command.
+- You can reset a node using `kubeadm reset` if needed.
