@@ -1,6 +1,6 @@
-# kubeadm-setup
+---------------------------------------- Kubeadm Installation ------------------------------------------ 
 
------------------------- Both Master & Worker Node ---------------------------------------
+-------------------------------------- Both Master & Worker Node ---------------------------------------
 sudo su
 apt update -y
 apt install docker.io -y
